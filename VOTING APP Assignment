@@ -1,0 +1,100 @@
+8. Now try to delete the Pods one by one (first voting Pod, then worker pod, then db pod) and see what happens to the voting and result app after deleting.
+
+9. Write your observations in a text file.
+
+> Delete Vote Pod
+  -> change on the frontEnd --> Processed by container ID is changed to the new container ID as mentioned below.
+  -> As soon as the Vote Pod is deleted, replication manager comes into the picture and creates the Vote Pod again.
+  
+  OUTPUT:
+  Before deletion:
+  [root@ip-172-31-14-212 k8s-specifications]# kubectl get all
+  NAME                          READY   STATUS    RESTARTS   AGE
+  pod/vote-94849dc97-c6tjc      1/1     Running   0          82m
+ 
+ 
+  After deletion:
+  [root@ip-172-31-14-212 k8s-specifications]# kubectl get all
+  NAME                          READY   STATUS              RESTARTS   AGE
+  pod/vote-94849dc97-pbckg      0/1     ContainerCreating   0          16s  
+  
+  [root@ip-172-31-14-212 k8s-specifications]# kubectl get all
+  NAME                          READY   STATUS    RESTARTS   AGE
+  pod/vote-94849dc97-pbckg      1/1     Running   0          6m19s
+
+
+> Delete Worker Pod
+  -> No change on the frontEnd
+  -> As soon as the Worker Pod is deleted, replication manager comes into the picture and creates the Worker Pod replica again.
+  
+  OUTPUT:
+  Before deletion:
+  [root@ip-172-31-14-212 k8s-specifications]# kubectl get all
+  NAME                          READY   STATUS    RESTARTS   AGE
+  pod/worker-dd46d7584-l5nxb    1/1     Running   0          104m
+ 
+ 
+  After deletion:
+  [root@ip-172-31-14-212 ~]# kubectl get all
+  pod/worker-dd46d7584-l5nxb    1/1     Terminating   0          2m3s
+  pod/worker-dd46d7584-xmht7    1/1     Running       0          5s
+
+  
+10. what happens after db pod deletion.
+
+> Delete db Pod
+  -> Voting Results is not appear.
+  
+  -> New db pod is created.  
+  [root@ip-172-31-14-212 ~]# kubectl get all
+  NAME                          READY   STATUS        RESTARTS   AGE
+  pod/db-b54cd94f4-qq6qm        1/1     Terminating   0          5m44s
+  pod/db-b54cd94f4-xd8n2        1/1     Running       0          20s
+  
+
+  -> Worker pod gets restarted.
+  [root@ip-172-31-14-212 ~]# kubectl get all
+  NAME                          READY   STATUS    RESTARTS   AGE
+  pod/worker-dd46d7584-xmht7    1/1     Running   1          4m17s
+
+
+
+11. complete the assignment by making the result pod work. (if you delete db pod, results would not be captured.So repeat what we did in the class in order to make the result pod work.).
+12. Write in the text file, what you did in order to make the result pod work.
+
+-> Delete the result pod. 
+-> Cast the vote and check the result.
+-> Now you will be able to see the change in result as per your vote.
+ 
+
+
+In summary, your text file should contain:
+1. Commands that you used during the assignment.
+2. snapshot of logs (wherever possible)
+
+-> When db pod got deleted
+[root@ip-172-31-14-212 k8s-specifications]# kubectl logs result-5d57b59f4b-xrq56
+Thu, 10 Nov 2022 14:46:19 GMT body-parser deprecated bodyParser: use individual json/urlencoded middlewares at server.js:67:9
+Thu, 10 Nov 2022 14:46:19 GMT body-parser deprecated undefined extended: provide extended option at ../node_modules/body-parser/index.js:105:29
+App running on port 80
+Connected to db
+Error performing query: Error: This socket has been ended by the other party
+
+-> when result pod got deleted
+[root@ip-172-31-14-212 k8s-specifications]# kubectl logs result-5d57b59f4b-76fc6
+Thu, 10 Nov 2022 15:47:35 GMT body-parser deprecated bodyParser: use individual json/urlencoded middlewares at server.js:67:9
+Thu, 10 Nov 2022 15:47:35 GMT body-parser deprecated undefined extended: provide extended option at ../node_modules/body-parser/index.js:105:29
+App running on port 80
+Connected to db
+
+
+3. your comment on WHY result app STOPPED working after db pod stop
+4. your answer to HOW YOU MADE THE RESULT POD work. 
+
+-> Result app gets an error while doing a query to the db, the socket gets ended with deletion of the db pod.
+-> The result pod has to be deleted in order to make the connection with the db service.
+
+
+
+
+
